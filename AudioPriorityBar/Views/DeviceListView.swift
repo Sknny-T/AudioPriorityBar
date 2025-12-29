@@ -117,11 +117,17 @@ struct DraggableDeviceRow: View {
         isDisconnected || isHiddenSection
     }
 
+    var isNeverUse: Bool {
+        audioManager.isNeverUse(device)
+    }
+
     var statusIcon: String? {
         if isDisconnected {
             return "wifi.slash"
         } else if isIgnored && audioManager.isEditMode {
             return "eye.slash"
+        } else if isNeverUse {
+            return "nosign"
         }
         return nil
     }
@@ -186,9 +192,10 @@ struct DraggableDeviceRow: View {
             HStack(spacing: 8) {
                 Text(device.name)
                     .font(.system(size: 13, weight: .regular))
+                    .strikethrough(isNeverUse, color: .secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .foregroundColor(isGrayed ? .secondary : .primary)
+                    .foregroundColor(isGrayed || isNeverUse ? .secondary : .primary)
 
                 if let icon = statusIcon {
                     Image(systemName: icon)
@@ -283,6 +290,19 @@ struct DraggableDeviceRow: View {
                             Label("Forget Device", systemImage: "trash")
                         }
                     }
+
+                    if device.isConnected {
+                        Divider()
+                        Button {
+                            audioManager.setNeverUse(device, neverUse: !audioManager.isNeverUse(device))
+                        } label: {
+                            if audioManager.isNeverUse(device) {
+                                Label("Allow Use", systemImage: "checkmark.circle")
+                            } else {
+                                Label("Never Use", systemImage: "nosign")
+                            }
+                        }
+                    }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .font(.system(size: 14))
@@ -303,11 +323,11 @@ struct DraggableDeviceRow: View {
         .padding(.vertical, 5)
         .opacity(isDragging ? 0.5 : (isGrayed ? 0.6 : 1.0))
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(isSelected && !isDisconnected ? Color.accentColor.opacity(0.12) : (isHovering ? Color.primary.opacity(0.06) : Color.clear))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(isSelected && !isDisconnected ? Color.accentColor.opacity(0.8) : Color.clear, lineWidth: 1.5)
         )
         // Drop indicator above this row
@@ -333,7 +353,7 @@ struct DraggableDeviceRow: View {
         }
         // Highlight the dragged row with a border instead of moving it
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(isDragging ? Color.accentColor : Color.clear, lineWidth: 2)
         )
         .scaleEffect(isDragging ? 1.02 : 1.0)

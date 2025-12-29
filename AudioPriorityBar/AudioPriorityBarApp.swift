@@ -218,20 +218,27 @@ class AudioManager: ObservableObject {
             hiddenSpeakerDevices = []
             hiddenHeadphoneDevices = []
         } else {
-            let visibleInputs = connectedInputs.filter { !priorityManager.isHidden($0) }
-            let hiddenInputs = connectedInputs.filter { priorityManager.isHidden($0) }
+            // Filter out hidden and never-use devices in normal mode
+            let visibleInputs = connectedInputs.filter { !priorityManager.isHidden($0) && !priorityManager.isNeverUse($0) }
+            // Hidden inputs: regular hidden first, then never-use
+            let regularHiddenInputs = connectedInputs.filter { priorityManager.isHidden($0) && !priorityManager.isNeverUse($0) }
+            let neverUseInputs = connectedInputs.filter { priorityManager.isNeverUse($0) }
             inputDevices = priorityManager.sortByPriority(visibleInputs, type: .input)
-            hiddenInputDevices = hiddenInputs
+            hiddenInputDevices = regularHiddenInputs + neverUseInputs
+
             let speakers = connectedOutputs.filter { priorityManager.getCategory(for: $0) == .speaker }
             let headphones = connectedOutputs.filter { priorityManager.getCategory(for: $0) == .headphone }
-            let visibleSpeakers = speakers.filter { !priorityManager.isHidden($0, inCategory: .speaker) }
-            let hiddenSpeakers = speakers.filter { priorityManager.isHidden($0, inCategory: .speaker) }
-            let visibleHeadphones = headphones.filter { !priorityManager.isHidden($0, inCategory: .headphone) }
-            let hiddenHeadphones = headphones.filter { priorityManager.isHidden($0, inCategory: .headphone) }
+            let visibleSpeakers = speakers.filter { !priorityManager.isHidden($0, inCategory: .speaker) && !priorityManager.isNeverUse($0) }
+            let visibleHeadphones = headphones.filter { !priorityManager.isHidden($0, inCategory: .headphone) && !priorityManager.isNeverUse($0) }
+            // Hidden outputs: regular hidden first, then never-use
+            let regularHiddenSpeakers = speakers.filter { priorityManager.isHidden($0, inCategory: .speaker) && !priorityManager.isNeverUse($0) }
+            let neverUseSpeakers = speakers.filter { priorityManager.isNeverUse($0) }
+            let regularHiddenHeadphones = headphones.filter { priorityManager.isHidden($0, inCategory: .headphone) && !priorityManager.isNeverUse($0) }
+            let neverUseHeadphones = headphones.filter { priorityManager.isNeverUse($0) }
             speakerDevices = priorityManager.sortByPriority(visibleSpeakers, category: .speaker)
             headphoneDevices = priorityManager.sortByPriority(visibleHeadphones, category: .headphone)
-            hiddenSpeakerDevices = hiddenSpeakers
-            hiddenHeadphoneDevices = hiddenHeadphones
+            hiddenSpeakerDevices = regularHiddenSpeakers + neverUseSpeakers
+            hiddenHeadphoneDevices = regularHiddenHeadphones + neverUseHeadphones
         }
         currentInputId = deviceService.getCurrentDefaultDevice(type: .input)
         currentOutputId = deviceService.getCurrentDefaultDevice(type: .output)
@@ -327,6 +334,22 @@ class AudioManager: ObservableObject {
         }
     }
 
+    func isNeverUse(_ device: AudioDevice) -> Bool {
+        priorityManager.isNeverUse(device)
+    }
+
+    func setNeverUse(_ device: AudioDevice, neverUse: Bool) {
+        priorityManager.setNeverUse(device, neverUse: neverUse)
+        refreshDevices()
+        if !isCustomMode {
+            if device.type == .input {
+                applyHighestPriorityInput()
+            } else {
+                applyHighestPriorityOutput()
+            }
+        }
+    }
+
     func moveInputDevice(from source: IndexSet, to destination: Int) {
         inputDevices.move(fromOffsets: source, toOffset: destination)
         priorityManager.savePriorities(inputDevices, type: .input)
@@ -373,14 +396,14 @@ class AudioManager: ObservableObject {
     }
 
     private func applyHighestPriorityInput() {
-        if let first = inputDevices.first(where: { $0.isConnected }) {
+        if let first = inputDevices.first(where: { $0.isConnected && !priorityManager.isNeverUse($0) }) {
             applyInputDevice(first)
         }
     }
 
     private func applyHighestPriorityOutput() {
         let devices = activeOutputDevices
-        if let first = devices.first(where: { $0.isConnected }) {
+        if let first = devices.first(where: { $0.isConnected && !priorityManager.isNeverUse($0) }) {
             applyOutputDevice(first)
         }
         refreshMuteStatus()
