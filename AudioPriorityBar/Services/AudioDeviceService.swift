@@ -89,13 +89,26 @@ class AudioDeviceService {
         return status == noErr ? deviceId : nil
     }
 
-    func setDefaultDevice(_ deviceId: AudioObjectID, type: AudioDeviceType) {
+    func setDefaultDevice(_ deviceId: AudioObjectID, type: AudioDeviceType, syncSystemOutput: Bool = true) {
         let selector: AudioObjectPropertySelector = type == .input
             ? kAudioHardwarePropertyDefaultInputDevice
             : kAudioHardwarePropertyDefaultOutputDevice
 
         logger.debug("📍 setDefaultDevice called - type: \(type == .input ? "input" : "output"), deviceId: \(deviceId)")
 
+        // Set the default device
+        setAudioDevice(deviceId, selector: selector)
+
+        // Sync system output if this is an output device and the preference is enabled
+        if type == .output && syncSystemOutput {
+            setAudioDevice(deviceId, selector: kAudioHardwarePropertyDefaultSystemOutputDevice)
+            logger.debug("🔊 Synced system output to match default output")
+        }
+
+        logger.debug("✅ setDefaultDevice completed - type: \(type == .input ? "input" : "output"), deviceId: \(deviceId)")
+    }
+    
+    private func setAudioDevice(_ deviceId: AudioObjectID, selector: AudioObjectPropertySelector) {
         var propertyAddress = AudioObjectPropertyAddress(
             mSelector: selector,
             mScope: kAudioObjectPropertyScopeGlobal,
@@ -113,8 +126,6 @@ class AudioDeviceService {
             dataSize,
             &mutableDeviceId
         )
-
-        logger.debug("✅ setDefaultDevice completed - type: \(type == .input ? "input" : "output"), deviceId: \(deviceId)")
     }
 
     func getOutputVolume() -> Float {

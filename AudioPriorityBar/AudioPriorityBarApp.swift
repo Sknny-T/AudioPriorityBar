@@ -579,7 +579,7 @@ class AudioManager: ObservableObject {
             return
         }
 
-        deviceService.setDefaultDevice(device.id, type: .output)
+        deviceService.setDefaultDevice(device.id, type: .output, syncSystemOutput: priorityManager.syncSystemOutput)
         currentOutputId = device.id
         logger.debug("  ✅ Output device set")
 

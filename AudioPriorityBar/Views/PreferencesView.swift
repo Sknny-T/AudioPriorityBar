@@ -106,6 +106,37 @@ struct GeneralPreferencesTab: View {
                 }
                 .groupBoxStyle(PreferencesGroupBoxStyle())
 
+                // System Output Sync section
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle(isOn: Binding(
+                            get: { audioManager.priorityManager.syncSystemOutput },
+                            set: { audioManager.priorityManager.syncSystemOutput = $0 }
+                        )) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Sync System Sound Effects Output")
+                                    .font(.system(size: 13, weight: .medium))
+                                Text("Automatically update \"Play sound effects through\" in System Settings to match the selected output device.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .toggleStyle(.switch)
+                        
+                        Text("⚠️ If you disable this app, you may need to manually reset the system sound effects output in System Settings.")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
+                    }
+                    .padding(12)
+                } label: {
+                    Label("System Audio", systemImage: "speaker.wave.2.circle")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                }
+                .groupBoxStyle(PreferencesGroupBoxStyle())
+
                 // Auto-switching section
                 GroupBox {
                     VStack(alignment: .leading, spacing: 8) {
@@ -178,7 +209,7 @@ struct AboutPreferencesTab: View {
                 // GitHub link
                 VStack(spacing: 10) {
                     Button {
-                        if let url = URL(string: "https://github.com/johanhenkens/AudioPriorityBar") {
+                        if let url = URL(string: "https://github.com/jhenkens/AudioPriorityBar") {
                             NSWorkspace.shared.open(url)
                         }
                     } label: {

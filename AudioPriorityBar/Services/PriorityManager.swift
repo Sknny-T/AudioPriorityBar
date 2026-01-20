@@ -43,6 +43,7 @@ class PriorityManager {
     private let hiddenDevicesKey = "hiddenDevices"
     private let knownDevicesKey = "knownDevices"
     private let quickSwitchKey = "quickSwitchEnabled"
+    private let syncSystemOutputKey = "syncSystemOutput"
 
     // MARK: - Known Devices (Persistent Memory)
 
@@ -105,6 +106,17 @@ class PriorityManager {
     var isQuickSwitchEnabled: Bool {
         get { defaults.bool(forKey: quickSwitchKey) }
         set { defaults.set(newValue, forKey: quickSwitchKey) }
+    }
+
+    var syncSystemOutput: Bool {
+        get { 
+            // Default to true if not set
+            if defaults.object(forKey: syncSystemOutputKey) == nil {
+                return true
+            }
+            return defaults.bool(forKey: syncSystemOutputKey)
+        }
+        set { defaults.set(newValue, forKey: syncSystemOutputKey) }
     }
 
     // MARK: - Device Categories
