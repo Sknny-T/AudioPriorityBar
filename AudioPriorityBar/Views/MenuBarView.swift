@@ -96,9 +96,17 @@ struct MenuBarView: View {
                 }
 
                 Spacer()
-                
-                // Launch at login toggle
-                LaunchAtLoginToggle()
+
+                // Settings button
+                Button {
+                    PreferencesWindowController.shared.show(audioManager: audioManager)
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+                .help("Preferences")
 
                 // Edit mode toggle
                 Button {
