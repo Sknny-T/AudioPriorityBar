@@ -93,7 +93,22 @@ struct MenuBarView: View {
                 // Standard menu items
                 EditModeToggle()
 
+<<<<<<< HEAD
                 LaunchAtLoginToggle()
+=======
+                Spacer()
+
+                // Settings button
+                Button {
+                    PreferencesWindowController.shared.show(audioManager: audioManager)
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+                .help("Preferences")
+>>>>>>> pr-21
 
                 Divider()
 
@@ -199,7 +214,9 @@ struct VolumeSliderView: View {
     @State private var isTransitioning = false
 
     var volumeIcon: String {
-        if audioManager.currentMode == .headphone {
+        if audioManager.isActiveOutputMuted {
+            return "speaker.slash.fill"
+        } else if audioManager.currentMode == .headphone {
             return "headphones"
         } else {
             if audioManager.volume <= 0 {
@@ -216,6 +233,7 @@ struct VolumeSliderView: View {
 
     var body: some View {
         HStack(spacing: 10) {
+<<<<<<< HEAD
             if #available(macOS 14.0, *) {
                 Image(systemName: volumeIcon)
                     .font(.system(size: 13))
@@ -235,6 +253,19 @@ struct VolumeSliderView: View {
             } else {
                 // Fallback on earlier versions
             }
+=======
+            Button {
+                audioManager.toggleOutputMute()
+            } label: {
+                Image(systemName: volumeIcon)
+                    .font(.system(size: 13))
+                    .foregroundColor(.accentColor)
+                    .frame(width: 20)
+                    .animation(.easeInOut(duration: 0.15), value: volumeIcon)
+            }
+            .buttonStyle(.plain)
+            .help(audioManager.isActiveOutputMuted ? "Unmute" : "Mute")
+>>>>>>> pr-21
 
             Slider(
                 value: Binding(

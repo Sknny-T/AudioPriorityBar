@@ -283,6 +283,7 @@ struct DraggableDeviceRow: View {
                                 }
                             }
                         }
+<<<<<<< HEAD
                         
                         if isDisconnected {
                             Divider()
@@ -304,6 +305,49 @@ struct DraggableDeviceRow: View {
                                 } else {
                                     Label("Never Use", systemImage: "nosign")
                                 }
+=======
+                    }
+
+                    // Prefer for current output (input devices only)
+                    if device.type == .input && device.isConnected, let currentOutputId = audioManager.currentOutputId,
+                       let currentOutput = (audioManager.speakerDevices + audioManager.headphoneDevices).first(where: { $0.id == currentOutputId }) {
+                        Divider()
+                        let isPreferred = audioManager.getPreferredInputUID(forOutput: currentOutput.uid) == device.uid
+                        Button {
+                            if isPreferred {
+                                audioManager.clearPreferredInput(forOutput: currentOutput.uid)
+                            } else {
+                                audioManager.setPreferredInput(device, forOutput: currentOutput.uid)
+                            }
+                        } label: {
+                            if isPreferred {
+                                Label("Clear preferred for \(currentOutput.name)", systemImage: "star.slash")
+                            } else {
+                                Label("Prefer for \(currentOutput.name)", systemImage: "star")
+                            }
+                        }
+                    }
+
+                    if isDisconnected {
+                        Divider()
+                        Button(role: .destructive) {
+                            audioManager.priorityManager.forgetDevice(device.uid)
+                            audioManager.refreshDevices()
+                        } label: {
+                            Label("Forget Device", systemImage: "trash")
+                        }
+                    }
+
+                    if device.isConnected {
+                        Divider()
+                        Button {
+                            audioManager.setNeverUse(device, neverUse: !audioManager.isNeverUse(device))
+                        } label: {
+                            if audioManager.isNeverUse(device) {
+                                Label("Allow Use", systemImage: "checkmark.circle")
+                            } else {
+                                Label("Never Use", systemImage: "nosign")
+>>>>>>> pr-21
                             }
                         }
                     } label: {
